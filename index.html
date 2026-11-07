@@ -20,6 +20,7 @@
   <div class="masthead__inner">
     <a class="wordmark" href="#top" aria-label="ATHERA home">ATHERA</a>
     <nav class="nav" aria-label="Sections">
+      <a href="#model"><span>3D</span>Model</a>
       <a href="#problem"><span>01</span>Problem</a>
       <a href="#system"><span>02</span>System</a>
       <a href="#physics"><span>03</span>Physics</a>
@@ -43,7 +44,7 @@
         <h1 class="hero__title">The coolest building is the one that <em>never got hot.</em></h1>
         <p class="hero__lede">Why keep spending electricity to pull heat out of buildings when you can stop most of it getting in? ATHERA retrofits the whole envelope&nbsp;— roof, walls and windows&nbsp;— with three passive titanium-dioxide technologies that reflect, scatter and reject solar heat, with no electricity needed to run them.</p>
         <div class="hero__actions">
-          <a class="btn btn--ink" href="#system">See how it works</a>
+          <a class="btn btn--ink" href="#model">Explore the 3D model</a>
           <a class="link-arrow" href="#evidence">What we claim — and how we’ll prove it <span aria-hidden="true">→</span></a>
         </div>
       </div>
@@ -63,6 +64,63 @@
         <div><dt>Price of one integrated retrofit</dt><dd>$52<small>k</small></dd></div>
         <div><dt>Modelled gross margin per retrofit</dt><dd>42<small>%</small></dd></div>
       </dl>
+    </div>
+  </section>
+
+  <!-- ========== 3D SHOWCASE ========== -->
+  <section class="showcase" id="model">
+    <div class="wrap">
+      <header class="showcase__head">
+        <p class="eyebrow">The product, in three dimensions</p>
+        <h2>Take the envelope apart.</h2>
+        <p class="showcase__intro">One building, four ATHERA components. Separate them, then select each one to watch what it does with sunlight, heat and rain.</p>
+      </header>
+
+      <div class="showcase__frame">
+        <div class="stage" id="stage">
+          <canvas id="stageCanvas" role="img" aria-label="Interactive 3D model of a building fitted with ATHERA roof tiles, wall coating, window films and a rainwater tank."></canvas>
+
+          <div class="stage__pins" aria-hidden="true">
+            <button class="pin" data-layer="roof" tabindex="-1"><b>A</b><span>Roof tiles</span></button>
+            <button class="pin" data-layer="wall" tabindex="-1"><b>B</b><span>Wall coating</span></button>
+            <button class="pin" data-layer="window" tabindex="-1"><b>C</b><span>Window films</span></button>
+            <button class="pin" data-layer="water" tabindex="-1"><b>D</b><span>Rainwater</span></button>
+          </div>
+
+          <div class="stage__hud">
+            <span>Model 01 · Full-envelope retrofit</span>
+            <span id="stageMode">Assembled</span>
+          </div>
+
+          <div class="stage__bar">
+            <div class="stage__layers" role="group" aria-label="Show component">
+              <button type="button" class="seg is-on" data-layer="all" aria-pressed="true">All</button>
+              <button type="button" class="seg" data-layer="roof" aria-pressed="false"><b>A</b> Roof</button>
+              <button type="button" class="seg" data-layer="wall" aria-pressed="false"><b>B</b> Wall</button>
+              <button type="button" class="seg" data-layer="window" aria-pressed="false"><b>C</b> Glazing</button>
+              <button type="button" class="seg" data-layer="water" aria-pressed="false"><b>D</b> Water</button>
+            </div>
+            <div class="stage__actions">
+              <button type="button" class="act act--primary" id="explodeBtn" aria-pressed="false">Explode view</button>
+              <button type="button" class="act" id="spinBtn" aria-pressed="true">Pause rotation</button>
+            </div>
+          </div>
+
+          <p class="stage__hint" id="stageHint">Drag to rotate</p>
+
+          <div class="stage__fallback" id="stageFallback" hidden>
+            <img src="assets/img/tower.jpg" alt="Aerial view of a building with a pale reflective roof" width="800" height="1200" loading="lazy">
+            <p>The 3D model needs WebGL, which this browser doesn’t have turned on. The diagram in § 02 shows the same four components.</p>
+          </div>
+        </div>
+
+        <aside class="stage__card" id="stageCard" aria-live="polite">
+          <p class="stage__card-key" id="cardKey">ATHERA</p>
+          <h3 id="cardTitle">Full-envelope retrofit</h3>
+          <p id="cardText">Four components working as one system on an existing building. Select a part to see what it does.</p>
+          <dl id="cardSpecs"></dl>
+        </aside>
+      </div>
     </div>
   </section>
 
@@ -678,5 +736,7 @@
 </footer>
 
 <script src="script.js" defer></script>
+<script type="importmap">{ "imports": { "three": "./assets/vendor/three/three.module.min.js" } }</script>
+<script type="module" src="assets/showcase.js"></script>
 </body>
 </html>
