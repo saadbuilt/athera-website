@@ -27,7 +27,8 @@
   const revealTargets = [
     ".section__head", ".problem__text", ".loop", ".section-cut", ".layers", ".tile-feature__img",
     ".tile-feature__text", ".spectrum", ".mechanisms", ".figures", ".callout-line", ".benefits__img",
-    ".benefits__list", ".budget", ".unit__text", ".calc", ".roadmap", ".closing__text", ".ledger"
+    ".benefits__list", ".budget", ".unit__text", ".calc", ".roadmap", ".closing__text", ".ledger",
+    ".triad", ".channels", ".clients", ".process", ".advantage", ".evidence", ".faq__head", ".faq__list"
   ];
   const revealObs = new IntersectionObserver((entries) => {
     entries.forEach((e) => {
@@ -118,7 +119,7 @@
     if (l < 0.7) return "Visible · reflected by roof & wall, let through by window film";
     if (l < 2.5) return "Near-infrared · scattered by TiO₂ before it reaches the envelope";
     if (l < 8) return "Mid-infrared · atmosphere largely opaque";
-    if (l <= 13) return "Atmospheric window · PDMS radiates heat out to space";
+    if (l <= 13) return "Atmospheric window · where the PDMS film is designed to radiate";
     return "Far-infrared · absorbed by CO₂ and water vapour";
   };
 
@@ -264,21 +265,24 @@
     });
   }
 
-  /* ---------- Retrofit calculator ---------- */
-  const PRICE = 52150, COST = 30200, BUDGET = 141948;
-  const range = $("#units");
-  if (range) {
-    const out = $("#unitsOut"), rev = $("#rev"), cost = $("#cost"), gp = $("#gp"), cover = $("#cover");
+  /* ---------- Customer payback calculator ---------- */
+  const PRICE = 52150;
+  const bill = $("#bill"), cutR = $("#cutPct");
+  if (bill && cutR) {
+    const fill = (r) => r.style.setProperty("--p", ((r.value - r.min) / (r.max - r.min)) * 100 + "%");
     const update = () => {
-      const n = +range.value;
-      out.textContent = n;
-      rev.textContent = "$" + fmt(n * PRICE);
-      cost.textContent = "$" + fmt(n * COST);
-      gp.textContent = "$" + fmt(n * (PRICE - COST));
-      cover.textContent = ((n * (PRICE - COST)) / BUDGET).toFixed(2) + "×";
-      range.style.setProperty("--p", ((n - +range.min) / (+range.max - +range.min)) * 100 + "%");
+      const b = +bill.value, c = +cutR.value / 100, s = b * c;
+      $("#billOut").textContent = "$" + fmt(b);
+      $("#cutOut").textContent = Math.round(c * 100) + "%";
+      $("#save").textContent = "$" + fmt(s);
+      $("#month").textContent = "$" + fmt(s / 12);
+      $("#payback").textContent = (PRICE / s).toFixed(2) + " yrs";
+      const net = s * 10 - PRICE;
+      $("#net10").textContent = (net < 0 ? "−$" : "$") + fmt(Math.abs(net));
+      fill(bill); fill(cutR);
     };
-    range.addEventListener("input", update);
+    bill.addEventListener("input", update);
+    cutR.addEventListener("input", update);
     update();
   }
 
