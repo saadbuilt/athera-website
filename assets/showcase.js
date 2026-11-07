@@ -1,5 +1,5 @@
 // ATHERA — interactive 3D product showcase (three.js r160)
-import * as THREE from "three";
+import * as THREE from "./vendor/three/three.module.min.js";
 
 const stage = document.getElementById("stage");
 const canvas = document.getElementById("stageCanvas");

@@ -286,6 +286,18 @@
     update();
   }
 
+  /* ---------- 3D fallback watchdog ---------- */
+  // If the 3D module can't run (old browser, blocked script, no WebGL), show the still image instead of an empty stage.
+  const stageEl = $("#stage");
+  if (stageEl) {
+    window.addEventListener("load", () => setTimeout(() => {
+      if (stageEl.classList.contains("is-ready") || stageEl.classList.contains("is-fallback")) return;
+      stageEl.classList.add("is-fallback");
+      const fb = $("#stageFallback");
+      if (fb) fb.hidden = false;
+    }, 5000));
+  }
+
   /* ---------- Budget bars ---------- */
   const budget = $(".budget");
   if (budget) {
