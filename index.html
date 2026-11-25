@@ -3,739 +3,302 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ATHERA — Passive Radiative Cooling</title>
-  <meta name="description" content="ATHERA is a climate-tech retrofit business turning roofs, walls and windows into one passive thermal barrier using titanium dioxide — starting in Pakistan.">
-  <meta name="theme-color" content="#f3f1ec">
+  <title>Mausam — Karachi weather</title>
+  <meta name="description" content="Live weather for Karachi: a sky drawn from the real position of the sun, 48 hours you can scrub through, air quality, the Arabian Sea, and a leaderboard of the forecast models themselves.">
+  <meta name="theme-color" content="#0a0a0a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=4">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2312161a'/%3E%3Cpath d='M9 24 16 7l7 17M11.5 18h9' stroke='%23f3f1ec' stroke-width='2.4' fill='none'/%3E%3C/svg%3E">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@200..700&family=Geist+Mono:wght@400;500&family=Noto+Nastaliq+Urdu:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,300..500;1,8..60,300..500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=1">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a0a0a'/%3E%3Ccircle cx='16' cy='14' r='5' fill='%23f4f4f2'/%3E%3Cpath d='M5 23h22' stroke='%232456ff' stroke-width='2.4'/%3E%3C/svg%3E">
 </head>
 <body>
+<a class="skip" href="#hours">Skip to forecast</a>
 
-<a class="skip" href="#main">Skip to content</a>
-
-<header class="masthead" id="top">
-  <div class="masthead__inner">
-    <a class="wordmark" href="#top" aria-label="ATHERA home">ATHERA</a>
-    <nav class="nav" aria-label="Sections">
-      <a href="#model"><span>3D</span>Model</a>
-      <a href="#problem"><span>01</span>Problem</a>
-      <a href="#system"><span>02</span>System</a>
-      <a href="#physics"><span>03</span>Physics</a>
-      <a href="#impact"><span>04</span>Targets</a>
-      <a href="#business"><span>05</span>Business</a>
-      <a href="#economics"><span>06</span>Economics</a>
-      <a href="#evidence"><span>07</span>Evidence</a>
-      <a href="#roadmap"><span>08</span>Roadmap</a>
-    </nav>
-    <span class="masthead__tag">UN SDG 13</span>
+<header class="nav">
+  <a class="brand" href="#top" aria-label="Mausam, Karachi weather">
+    <svg class="brand__mark" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="11.5" r="5.2"/><path d="M3 20.5h22"/></svg>
+    <span class="brand__name">Mausam</span>
+    <span class="brand__sub">Karachi<br>Weather</span>
+  </a>
+  <nav class="menu" aria-label="Sections">
+    <a href="#hours">Hours</a>
+    <a href="#city">City</a>
+    <a href="#days">Days</a>
+    <a href="#instruments">Instruments</a>
+    <a href="#models">Models</a>
+  </nav>
+  <div class="nav__right">
+    <span class="stamp" id="stamp" data-state="loading"><i aria-hidden="true"></i><span id="stampText">Connecting</span></span>
+    <div class="seg seg--dark" id="unit" role="group" aria-label="Temperature unit">
+      <button type="button" data-unit="C" aria-pressed="true">°C</button>
+      <button type="button" data-unit="F" aria-pressed="false">°F</button>
+    </div>
   </div>
 </header>
 
-<main id="main">
+<main id="top">
+  <!-- ============ SKY ============ -->
+  <section class="hero" id="hero" aria-label="Current conditions">
+    <canvas class="hero__sky" id="sky" aria-hidden="true"></canvas>
+    <div class="hero__ruler" id="ruler" aria-hidden="true"></div>
 
-  <!-- ========== HERO ========== -->
-  <section class="hero">
-    <div class="wrap hero__grid">
-      <div class="hero__text">
-        <p class="eyebrow">Passive radiative cooling for a sustainable built environment · Pakistan</p>
-        <h1 class="hero__title">The coolest building is the one that <em>never got hot.</em></h1>
-        <p class="hero__lede">Why keep spending electricity to pull heat out of buildings when you can stop most of it getting in? ATHERA retrofits the whole envelope&nbsp;— roof, walls and windows&nbsp;— with three passive titanium-dioxide technologies that reflect, scatter and reject solar heat, with no electricity needed to run them.</p>
-        <div class="hero__actions">
-          <a class="btn btn--ink" href="#model">Explore the 3D model</a>
-          <a class="link-arrow" href="#evidence">What we claim — and how we’ll prove it <span aria-hidden="true">→</span></a>
-        </div>
+    <div class="anno" id="annoSun" aria-hidden="true"><span class="anno__tag" id="annoSunTag">OBJ_01 SUN</span></div>
+    <div class="anno" id="annoMoon" aria-hidden="true"><span class="anno__tag" id="annoMoonTag">OBJ_02 MOON</span></div>
+    <div class="anno anno--sea" id="annoSea" aria-hidden="true"><span class="anno__tag" id="annoSeaTag">ARABIAN SEA</span></div>
+
+    <div class="hero__body">
+      <p class="hero__meta"><span>Karachi</span><span>24.86°N 67.00°E</span><span id="clock">--:--:-- PKT</span></p>
+      <div class="hero__now">
+        <span class="hero__temp" id="temp">–</span><span class="hero__deg" aria-hidden="true">°</span>
+        <span class="hero__ur" lang="ur" dir="rtl">کراچی</span>
       </div>
-      <figure class="hero__figure">
-        <div class="hero__img">
-          <img src="assets/img/tower.jpg" alt="Aerial view of a glass office building with a pale reflective roof surrounded by city blocks" width="800" height="1200">
-          <span class="hero__scan" aria-hidden="true"></span>
-        </div>
-        <figcaption><span>Fig. 01</span> Full-envelope retrofit concept — roof, facade and glazing treated as one continuous shield. Visualisation.</figcaption>
-      </figure>
+      <p class="hero__cond">
+        <span class="hero__icon" id="condIcon" aria-hidden="true"></span>
+        <span id="cond">Reading the sky</span>
+        <span class="hero__sep" id="feels"></span>
+        <span class="hero__sep" id="hilo"></span>
+      </p>
+      <h1 class="hero__say" id="say">Asking the models about Karachi…</h1>
+      <button class="pill pill--light" id="retry" type="button" hidden>Try again</button>
     </div>
 
-    <div class="wrap">
-      <dl class="ledger">
-        <div><dt>Envelope technologies, plus rainwater capture</dt><dd>3<small>+1</small></dd></div>
-        <div><dt>Electricity needed to run the passive layers</dt><dd>0<small>kWh</small></dd></div>
-        <div><dt>Price of one integrated retrofit</dt><dd>$52<small>k</small></dd></div>
-        <div><dt>Modelled gross margin per retrofit</dt><dd>42<small>%</small></dd></div>
-      </dl>
+    <p class="hero__foot"><span>Looking south from Clifton, over the Arabian Sea</span><a href="#hours">Scroll ↓</a></p>
+  </section>
+
+  <!-- ============ HOURS ============ -->
+  <section class="wrap hours" id="hours">
+    <div class="panel">
+      <div class="panel__head">
+        <div>
+          <h2 class="panel__title">Next 48 hours</h2>
+          <p class="panel__sub">Drag across the chart. The sky, the readings and every instrument below move to the hour you pick.</p>
+        </div>
+        <div class="seg" id="metric" role="tablist" aria-label="Chart shows">
+          <button type="button" role="tab" data-metric="temp" aria-selected="true">Temperature</button>
+          <button type="button" role="tab" data-metric="rain" aria-selected="false">Rain</button>
+          <button type="button" role="tab" data-metric="wind" aria-selected="false">Wind</button>
+          <button type="button" role="tab" data-metric="air" aria-selected="false">Air</button>
+        </div>
+      </div>
+      <div class="chart" id="hoursChart" tabindex="0" role="slider" aria-label="Hour of forecast" aria-valuemin="0" aria-valuemax="47" aria-valuenow="0" aria-valuetext="Now"></div>
+      <p class="panel__foot"><span id="hoursLegend"></span><span class="keys"><kbd>←</kbd><kbd>→</kbd> step an hour <kbd>N</kbd> now</span></p>
     </div>
   </section>
 
-  <!-- ========== 3D SHOWCASE ========== -->
-  <section class="showcase" id="model">
-    <div class="wrap">
-      <header class="showcase__head">
-        <p class="eyebrow">The product, in three dimensions</p>
-        <h2>Take the envelope apart.</h2>
-        <p class="showcase__intro">One building, four ATHERA components. Separate them, then select each one to watch what it does with sunlight, heat and rain.</p>
-      </header>
+  <!-- ============ CITY ============ -->
+  <section class="wrap block" id="city">
+    <header class="block__head block__head--split">
+      <div>
+        <h2>The city, in this weather</h2>
+        <p>Every building Google can see in Karachi, 1.57 million of them, stood on a table and lit by the sun from where it really is. Move through the hours above and the shadows move with you.</p>
+      </div>
+      <div class="block__actions">
+        <button class="pill pill--white" id="citySpin" type="button" aria-pressed="true">Pause rotation</button>
+        <button class="pill pill--ink" id="cityTop" type="button" aria-pressed="false">Plan view</button>
+      </div>
+    </header>
+    <div class="stage" id="cityStage">
+      <canvas id="cityCanvas" role="img" aria-label="Three-dimensional model of Karachi's coast and landmarks under the current weather."></canvas>
+      <div class="stage__pins" id="cityPins" aria-hidden="true"></div>
+      <p class="stage__hud">Karachi · 1,571,619 buildings · heights ×10</p>
+      <div class="stage__read" id="cityRead" aria-live="off"></div>
+      <div class="stage__north" aria-hidden="true"><svg viewBox="0 0 28 28" id="cityNorth"><path d="M14 3l5 13h-10z"/><path d="M14 16v9"/></svg><span>N</span></div>
+      <p class="stage__scale" aria-hidden="true"><i id="cityScale"></i><span>5 km</span></p>
+      <p class="stage__hint" id="cityHint">Drag to turn the city</p>
+      <p class="stage__fallback">The 3D city needs WebGL, which this browser doesn't have switched on. Everything else on the page still works.</p>
+    </div>
+    <p class="fine">Built from <a href="https://sites.research.google/gr/open-buildings/" rel="noopener">Google Open Buildings</a>. Each block is one 100-metre square of the real city: its footprint is the share of that square covered by buildings, and its height is the average building height there in 2023, exaggerated ten times so the skyline reads. Land is drawn where the data finds buildings nearby, so bare ground at the water's edge can read as sea, and lagoons ringed by buildings can read as land. The nine landmarks are modelled by hand at their real coordinates.</p>
+  </section>
 
-      <div class="showcase__frame">
-        <div class="stage" id="stage">
-          <canvas id="stageCanvas" role="img" aria-label="Interactive 3D model of a building fitted with ATHERA roof tiles, wall coating, window films and a rainwater tank."></canvas>
+  <!-- ============ INSTRUMENTS ============ -->
+  <section class="wrap block" id="instruments">
+    <header class="block__head">
+      <h2>Instruments</h2>
+      <p>Ten days ahead, and ten ways of reading the air right now.</p>
+    </header>
 
-          <div class="stage__pins" aria-hidden="true">
-            <button class="pin" data-layer="roof" tabindex="-1"><b>A</b><span>Roof tiles</span></button>
-            <button class="pin" data-layer="wall" tabindex="-1"><b>B</b><span>Wall coating</span></button>
-            <button class="pin" data-layer="window" tabindex="-1"><b>C</b><span>Window films</span></button>
-            <button class="pin" data-layer="water" tabindex="-1"><b>D</b><span>Rainwater</span></button>
+    <div class="grid">
+      <article class="card card--days" id="days">
+        <span class="tab">Ten days</span>
+        <ol class="days" id="daysList"></ol>
+      </article>
+
+      <article class="card card--wind">
+        <span class="tab">Wind · 10 m above ground</span>
+        <div class="wind">
+          <div class="compass">
+            <canvas id="windFx" width="320" height="320" aria-hidden="true"></canvas>
+            <svg id="compass" viewBox="0 0 200 200" role="img" aria-label="Wind compass"></svg>
           </div>
-
-          <div class="stage__hud">
-            <span>Model 01 · Full-envelope retrofit</span>
-            <span id="stageMode">Assembled</span>
-          </div>
-
-          <div class="stage__bar">
-            <div class="stage__layers" role="group" aria-label="Show component">
-              <button type="button" class="seg is-on" data-layer="all" aria-pressed="true">All</button>
-              <button type="button" class="seg" data-layer="roof" aria-pressed="false"><b>A</b> Roof</button>
-              <button type="button" class="seg" data-layer="wall" aria-pressed="false"><b>B</b> Wall</button>
-              <button type="button" class="seg" data-layer="window" aria-pressed="false"><b>C</b> Glazing</button>
-              <button type="button" class="seg" data-layer="water" aria-pressed="false"><b>D</b> Water</button>
-            </div>
-            <div class="stage__actions">
-              <button type="button" class="act act--primary" id="explodeBtn" aria-pressed="false">Explode view</button>
-              <button type="button" class="act" id="spinBtn" aria-pressed="true">Pause rotation</button>
-            </div>
-          </div>
-
-          <p class="stage__hint" id="stageHint">Drag to rotate</p>
-
-          <div class="stage__fallback" id="stageFallback" hidden>
-            <img src="assets/img/tower.jpg" alt="Aerial view of a building with a pale reflective roof" width="800" height="1200" loading="lazy">
-            <p>The 3D model needs WebGL, which this browser doesn’t have turned on. The diagram in § 02 shows the same four components.</p>
+          <div class="wind__read">
+            <p class="big"><b id="windSpd">–</b><span>km/h</span></p>
+            <p class="line" id="windTxt">&nbsp;</p>
+            <dl class="rows">
+              <div><dt>Gusts</dt><dd id="windGust">–</dd></div>
+              <div><dt>Bearing</dt><dd id="windDir">–</dd></div>
+            </dl>
+            <p class="note" id="windNote"></p>
           </div>
         </div>
+      </article>
 
-        <aside class="stage__card" id="stageCard" aria-live="polite">
-          <p class="stage__card-key" id="cardKey">ATHERA</p>
-          <h3 id="cardTitle">Full-envelope retrofit</h3>
-          <p id="cardText">Four components working as one system on an existing building. Select a part to see what it does.</p>
-          <dl id="cardSpecs"></dl>
-        </aside>
-      </div>
+      <article class="card card--uv">
+        <span class="tab">UV index</span>
+        <p class="big"><b id="uvNum">–</b><span id="uvLvl"></span></p>
+        <div class="scale scale--uv"><i id="uvMark"></i></div>
+        <p class="line" id="uvTxt">&nbsp;</p>
+      </article>
+
+      <article class="card card--air">
+        <span class="tab">Air · US AQI</span>
+        <div class="air__top">
+          <p class="big"><b id="aqiNum">–</b><span id="aqiLvl"></span></p>
+          <svg class="spark" id="aqiSpark" viewBox="0 0 160 44" preserveAspectRatio="none" aria-hidden="true"></svg>
+        </div>
+        <div class="scale scale--aqi"><i id="aqiMark"></i></div>
+        <dl class="rows rows--2">
+          <div><dt>PM2.5</dt><dd id="pm25">–</dd></div>
+          <div><dt>PM10</dt><dd id="pm10">–</dd></div>
+          <div><dt>NO₂</dt><dd id="no2">–</dd></div>
+          <div><dt>Ozone</dt><dd id="o3">–</dd></div>
+        </dl>
+        <p class="note" id="aqiTxt"></p>
+      </article>
+
+      <article class="card card--feel">
+        <span class="tab">Humidity</span>
+        <p class="big"><b id="humNum">–</b><span>%</span></p>
+        <div class="scale scale--dew"><i id="dewMark"></i></div>
+        <p class="line" id="feelTxt">&nbsp;</p>
+        <dl class="rows">
+          <div><dt>Dew point</dt><dd id="dew">–</dd></div>
+          <div><dt>Wet-bulb</dt><dd id="wetbulb">–</dd></div>
+          <div><dt>Feels like</dt><dd id="feels2">–</dd></div>
+        </dl>
+      </article>
+
+      <article class="card card--sea">
+        <span class="tab">Arabian Sea · off Manora</span>
+        <svg class="plot" id="seaChart" role="img" aria-label="Sea level over the next 48 hours"></svg>
+        <p class="line" id="seaTxt">&nbsp;</p>
+        <dl class="rows rows--4">
+          <div><dt>Waves</dt><dd id="wave">–</dd></div>
+          <div><dt>Period</dt><dd id="wper">–</dd></div>
+          <div><dt>From</dt><dd id="wfrom">–</dd></div>
+          <div><dt>Water</dt><dd id="sst">–</dd></div>
+        </dl>
+      </article>
+
+      <article class="card card--sun">
+        <span class="tab">Sun &amp; moon</span>
+        <svg class="plot" id="sunChart" role="img" aria-label="Path of the sun today"></svg>
+        <dl class="rows rows--4">
+          <div><dt>Sunrise</dt><dd id="sunrise">–</dd></div>
+          <div><dt>Sunset</dt><dd id="sunset">–</dd></div>
+          <div><dt>Daylight</dt><dd id="daylen">–</dd></div>
+          <div><dt>Highest</dt><dd id="noon">–</dd></div>
+        </dl>
+        <p class="moon"><svg id="moonIcon" viewBox="0 0 40 40" aria-hidden="true"></svg><span id="moonTxt">&nbsp;</span></p>
+      </article>
+
+      <article class="card card--rain">
+        <span class="tab">Rain · ten days</span>
+        <p class="line line--lead" id="rainTxt">&nbsp;</p>
+        <svg class="plot plot--short" id="rainChart" role="img" aria-label="Daily rainfall forecast"></svg>
+      </article>
+
+      <article class="card card--press">
+        <span class="tab">Pressure · sea level</span>
+        <p class="big"><b id="presNum">–</b><span>hPa</span></p>
+        <p class="line" id="presTxt">&nbsp;</p>
+        <svg class="spark spark--wide" id="presSpark" viewBox="0 0 300 48" preserveAspectRatio="none" aria-hidden="true"></svg>
+      </article>
+
+      <article class="card card--vis">
+        <span class="tab">Visibility &amp; cloud</span>
+        <p class="big"><b id="visNum">–</b><span>km</span></p>
+        <p class="line" id="visTxt">&nbsp;</p>
+        <dl class="rows">
+          <div><dt>Cloud cover</dt><dd id="cloud">–</dd></div>
+        </dl>
+        <div class="meter"><i id="cloudBar"></i></div>
+      </article>
     </div>
   </section>
 
-  <!-- ========== 01 PROBLEM ========== -->
-  <section class="section" id="problem">
-    <div class="wrap">
-      <header class="section__head">
-        <span class="section__num">§ 01</span>
-        <h2>The cooling crisis is accelerating.</h2>
-      </header>
-
-      <div class="problem">
-        <div class="problem__text prose">
-          <p class="dropcap">Pakistan lives with extreme summer heat, rising cooling demand and an electricity grid that is already under strain. Every day, buildings soak up solar heat through their roofs, walls and windows — and then we spend electricity removing it again.</p>
-          <p>The result is a destructive loop. Air conditioners dump their heat back into the street; every kilowatt they draw adds emissions. Dense urban areas can run <strong>3–5&nbsp;°C hotter</strong> than the surrounding countryside, driven by heat-absorbing surfaces and the waste heat of the machines meant to fix them.</p>
-          <blockquote class="pull">
-            Cooling our buildings heats our cities — and fuels the very crisis we are trying to solve.
-          </blockquote>
-          <p>The most sustainable cooling strategy is not a bigger air conditioner. It is <strong>stopping buildings from absorbing heat in the first place.</strong></p>
-        </div>
-
-        <figure class="loop" id="loop">
-          <svg viewBox="0 0 400 400" role="img" aria-labelledby="loopTitle">
-            <title id="loopTitle">The cooling feedback loop: more cooling leads to more energy, more emissions, hotter cities and more cooling demand.</title>
-            <circle class="loop__track" cx="200" cy="200" r="130"/>
-            <circle class="loop__flow" cx="200" cy="200" r="130"/>
-            <g class="loop__cut">
-              <line x1="290" y1="290" x2="320" y2="320"/>
-              <line x1="300" y1="282" x2="328" y2="310"/>
-            </g>
-            <g class="loop__nodes">
-              <g transform="translate(200 70)"><circle r="5"/><text y="-16" text-anchor="middle">More cooling</text></g>
-              <g transform="translate(323.6 159.8)"><circle r="5"/><text x="14" y="4">More energy</text></g>
-              <g transform="translate(276.4 305.2)"><circle r="5"/><text x="12" y="22">More emissions</text></g>
-              <g transform="translate(123.6 305.2)"><circle r="5"/><text x="-12" y="22" text-anchor="end">Hotter cities</text></g>
-              <g transform="translate(76.4 159.8)"><circle r="5"/><text x="-14" y="4" text-anchor="end">More demand</text></g>
-            </g>
-            <text class="loop__center" x="200" y="196" text-anchor="middle">The HVAC</text>
-            <text class="loop__center" x="200" y="218" text-anchor="middle">feedback loop</text>
-          </svg>
-          <figcaption>
-            <span>Fig. 02</span> Each turn of the loop makes the next one worse.
-            <button class="chip" id="loopBtn" type="button" aria-pressed="false">Break the loop</button>
-          </figcaption>
-        </figure>
+  <!-- ============ MODELS ============ -->
+  <section class="wrap block" id="models">
+    <header class="block__head block__head--split">
+      <div>
+        <h2>Leaderboard</h2>
+        <p>A forecast is an opinion. Eight global weather models each have one about Karachi; here is how close each got over the past week.</p>
       </div>
-
-      <div class="triad">
-        <div><span class="mono">Environmental</span><p>Rising urban temperatures, heat-island effects, growing emissions and deep dependence on mechanical cooling.</p></div>
-        <div><span class="mono">Economic</span><p>High electricity bills, climbing cooling spend, grid pressure and long-term operating costs for commercial buildings.</p></div>
-        <div><span class="mono">Social</span><p>Poor thermal comfort, heat exposure in schools and hospitals, and greater vulnerability where power is unreliable.</p></div>
+      <div class="block__actions">
+        <a class="pill pill--white" href="#method">Methodology</a>
+        <a class="pill pill--ink" href="#spread">Next 7 days</a>
       </div>
+    </header>
+
+    <div class="seg seg--tabs" id="lead" role="tablist" aria-label="Forecast lead time">
+      <button type="button" role="tab" data-lead="1" aria-selected="true">24 h ahead</button>
+      <button type="button" role="tab" data-lead="2" aria-selected="false">48 h ahead</button>
+      <button type="button" role="tab" data-lead="3" aria-selected="false">72 h ahead</button>
     </div>
-  </section>
 
-  <!-- ========== 02 SYSTEM ========== -->
-  <section class="section section--rule" id="system">
-    <div class="wrap">
-      <header class="section__head">
-        <span class="section__num">§ 02</span>
-        <h2>Three layers. One continuous shield.</h2>
-        <p class="section__intro">ATHERA is not a roof tile or a paint. Others address individual sources of heat; ATHERA treats the building envelope as one integrated cooling system. Each layer uses a different property of titanium dioxide (TiO<sub>2</sub>) to reflect, scatter or radiate heat — and the roof doubles as a rainwater catchment.</p>
-      </header>
-
-      <div class="system">
-        <figure class="section-cut">
-          <svg viewBox="0 0 600 450" role="img" aria-labelledby="cutTitle" id="cut">
-            <title id="cutTitle">Elevation of a building showing the ATHERA components: ventilated roof tiles, exterior wall coating, window films and a rainwater tank.</title>
-            <defs>
-              <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                <line x1="0" y1="0" x2="0" y2="6" class="hatch-line"/>
-              </pattern>
-              <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M0 0 10 5 0 10z" class="arrowhead"/>
-              </marker>
-              <marker id="arrowSun" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M0 0 10 5 0 10z" class="arrowhead--sun"/>
-              </marker>
-            </defs>
-
-            <g class="sun">
-              <circle cx="62" cy="62" r="20"/>
-              <g class="sun__rays">
-                <line x1="62" y1="28" x2="62" y2="20"/><line x1="62" y1="96" x2="62" y2="104"/>
-                <line x1="28" y1="62" x2="20" y2="62"/><line x1="96" y1="62" x2="104" y2="62"/>
-                <line x1="38" y1="38" x2="32" y2="32"/><line x1="86" y1="86" x2="92" y2="92"/>
-                <line x1="86" y1="38" x2="92" y2="32"/><line x1="38" y1="86" x2="32" y2="92"/>
-              </g>
-            </g>
-
-            <line class="ground" x1="20" y1="410" x2="590" y2="410"/>
-            <rect x="20" y="410" width="570" height="14" fill="url(#hatch)" class="ground-fill"/>
-
-            <rect class="body" x="176" y="150" width="292" height="260"/>
-
-            <g class="layer" data-layer="wall">
-              <rect class="layer__hit" x="150" y="150" width="34" height="260"/>
-              <rect x="176" y="150" width="14" height="260" fill="url(#hatch)" class="wall-core"/>
-              <rect x="168" y="150" width="8" height="260" class="coat"/>
-              <rect x="468" y="150" width="8" height="260" class="coat"/>
-              <g class="rays">
-                <line class="ray ray--in" x1="88" y1="92" x2="164" y2="250" marker-end="url(#arrowSun)"/>
-                <line class="ray ray--out" x1="164" y1="256" x2="96" y2="300" marker-end="url(#arrow)"/>
-                <line class="ray ray--out" x1="164" y1="262" x2="110" y2="330" marker-end="url(#arrow)"/>
-              </g>
-            </g>
-
-            <g class="layer" data-layer="window">
-              <g class="windows">
-                <rect x="222" y="184" width="54" height="56"/><rect x="304" y="184" width="54" height="56"/><rect x="386" y="184" width="54" height="56"/>
-                <rect x="222" y="262" width="54" height="56"/><rect x="304" y="262" width="54" height="56"/><rect x="386" y="262" width="54" height="56"/>
-                <rect x="222" y="340" width="54" height="56"/><rect x="304" y="340" width="54" height="56"/><rect x="386" y="340" width="54" height="56"/>
-              </g>
-              <g class="glints">
-                <line x1="230" y1="232" x2="254" y2="192"/><line x1="312" y1="232" x2="336" y2="192"/><line x1="394" y1="232" x2="418" y2="192"/>
-                <line x1="230" y1="310" x2="254" y2="270"/><line x1="312" y1="310" x2="336" y2="270"/><line x1="394" y1="310" x2="418" y2="270"/>
-                <line x1="230" y1="388" x2="254" y2="348"/><line x1="312" y1="388" x2="336" y2="348"/><line x1="394" y1="388" x2="418" y2="348"/>
-              </g>
-              <g class="rays">
-                <line class="ray ray--in" x1="96" y1="80" x2="240" y2="206" marker-end="url(#arrowSun)"/>
-                <line class="ray ray--day" x1="248" y1="214" x2="268" y2="232" marker-end="url(#arrow)"/>
-                <line class="ray ray--out" x1="234" y1="200" x2="200" y2="128" marker-end="url(#arrow)"/>
-              </g>
-            </g>
-
-            <g class="layer" data-layer="roof">
-              <rect class="layer__hit" x="150" y="96" width="340" height="56"/>
-              <rect class="slab" x="160" y="140" width="324" height="10"/>
-              <line class="post" x1="172" y1="124" x2="172" y2="140"/>
-              <line class="post" x1="472" y1="124" x2="472" y2="140"/>
-              <path class="tiles" d="M160 124 q 18 -16 36 0 q 18 -16 36 0 q 18 -16 36 0 q 18 -16 36 0 q 18 -16 36 0 q 18 -16 36 0 q 18 -16 36 0 q 18 -16 36 0 q 18 -16 36 0"/>
-              <g class="convection">
-                <path d="M222 138 v-10"/><path d="M262 138 v-10"/><path d="M302 138 v-10"/><path d="M342 138 v-10"/><path d="M382 138 v-10"/><path d="M422 138 v-10"/>
-              </g>
-              <path class="breeze" d="M140 132 H 500" marker-end="url(#arrow)"/>
-              <g class="rays">
-                <line class="ray ray--in" x1="80" y1="50" x2="250" y2="112" marker-end="url(#arrowSun)"/>
-                <line class="ray ray--out" x1="256" y1="110" x2="340" y2="34" marker-end="url(#arrow)"/>
-                <path class="ray ray--ir" d="M420 104 q 6 -8 0 -16 q -6 -8 0 -16 q 6 -8 0 -16 q -6 -8 0 -16" marker-end="url(#arrow)"/>
-                <path class="ray ray--ir" d="M448 104 q 6 -8 0 -16 q -6 -8 0 -16 q 6 -8 0 -16 q -6 -8 0 -16" marker-end="url(#arrow)"/>
-              </g>
-            </g>
-
-            <g class="layer" data-layer="water">
-              <rect class="layer__hit" x="480" y="120" width="110" height="290"/>
-              <path class="pipe" d="M484 126 H 570 V 330"/>
-              <rect class="tank" x="516" y="330" width="64" height="80" rx="3"/>
-              <rect class="tank__water" x="518" y="360" width="60" height="48"/>
-              <path class="tank__wave" d="M518 360 q 7.5 -4 15 0 q 7.5 4 15 0 q 7.5 -4 15 0 q 7.5 4 15 0"/>
-              <g class="rays drops">
-                <path class="ray ray--rain" d="M520 40 l -6 16"/><path class="ray ray--rain" d="M540 58 l -6 16"/><path class="ray ray--rain" d="M500 64 l -6 16"/><path class="ray ray--rain" d="M560 30 l -6 16"/>
-              </g>
-            </g>
-
-            <g class="callout" data-layer="roof">
-              <line x1="484" y1="114" x2="510" y2="92"/><text x="514" y="88">A</text><text class="callout__sub" x="514" y="102">Roof</text>
-            </g>
-            <g class="callout" data-layer="wall">
-              <line x1="168" y1="380" x2="100" y2="380"/><text x="96" y="376" text-anchor="end">B</text><text class="callout__sub" x="96" y="390" text-anchor="end">Wall</text>
-            </g>
-            <g class="callout" data-layer="window">
-              <line x1="440" y1="240" x2="500" y2="240"/><text x="504" y="236">C</text><text class="callout__sub" x="504" y="250">Glazing</text>
-            </g>
-            <g class="callout" data-layer="water">
-              <text x="548" y="350" text-anchor="middle">D</text>
-            </g>
-            <text class="ir-label" x="434" y="26" text-anchor="middle">LWIR → space</text>
-          </svg>
-          <figcaption><span>Fig. 03</span> Elevation, not to scale. Select a component to trace its path.</figcaption>
-        </figure>
-
-        <div class="layers" role="tablist" aria-label="ATHERA components">
-          <article class="layer-card is-active" data-layer="roof" role="tab" tabindex="0" aria-selected="true">
-            <header><span class="layer-card__key">A</span><h3>TiO<sub>2</sub> ventilated roof tiles</h3></header>
-            <div class="layer-card__body"><div class="layer-card__inner">
-              <p>Anatase TiO<sub>2</sub>-coated ceramic tiles reflect part of the incoming solar radiation. Beneath them, a ventilated air gap lets warmed air rise and escape, carrying heat away from the ceiling slab by natural convection — no fans, no electricity.</p>
-              <ul class="ticks">
-                <li>Solar reflectance</li>
-                <li>Passive convective ventilation gap</li>
-                <li>Photocatalytic self-cleaning to slow albedo decay</li>
-              </ul>
-            </div></div>
-          </article>
-          <article class="layer-card" data-layer="wall" role="tab" tabindex="0" aria-selected="false">
-            <header><span class="layer-card__key">B</span><h3>TiO<sub>2</sub> exterior wall coating</h3></header>
-            <div class="layer-card__body"><div class="layer-card__inner">
-              <p>A rutile TiO<sub>2</sub> coating that reflects and backscatters UV and near-infrared rays before the wall absorbs them — designed to <strong>block over 50% of solar heat gain</strong> at the wall surface — while photocatalytic oxidation breaks down certain NO<sub>x</sub> and VOC pollutants.</p>
-              <ul class="ticks">
-                <li>Rutile TiO<sub>2</sub> for high refractive index</li>
-                <li>Photocatalytic air-purifying action</li>
-                <li>Reflective, low-maintenance finish</li>
-              </ul>
-            </div></div>
-          </article>
-          <article class="layer-card" data-layer="window" role="tab" tabindex="0" aria-selected="false">
-            <header><span class="layer-card__key">C</span><h3>Flexible radiative window films</h3></header>
-            <div class="layer-card__body"><div class="layer-card__inner">
-              <p>TiO<sub>2</sub> nanoparticles in a PDMS (polydimethylsiloxane) matrix scatter incoming solar heat while letting daylight through. The PDMS host is designed to radiate heat outward as long-wave infrared through the atmospheric transparency window.</p>
-              <ul class="ticks">
-                <li>High visible-light transmission</li>
-                <li>Passive radiative heat rejection</li>
-                <li>Flexible, retrofit-friendly application</li>
-              </ul>
-            </div></div>
-          </article>
-          <article class="layer-card" data-layer="water" role="tab" tabindex="0" aria-selected="false">
-            <header><span class="layer-card__key">D</span><h3>Integrated rainwater harvesting</h3></header>
-            <div class="layer-card__body"><div class="layer-card__inner">
-              <p>The roof becomes a catchment. A 30,000-litre storage system captures rainwater for non-potable building uses — a second sustainability benefit, beyond cooling, from the same roof works.</p>
-              <ul class="ticks">
-                <li>30,000 L storage capacity</li>
-                <li>Non-potable uses: flushing, cleaning, irrigation</li>
-                <li>Built into the roof &amp; water-capture package</li>
-              </ul>
-            </div></div>
-          </article>
-        </div>
+    <div class="board">
+      <div class="board__head">
+        <p class="board__title" id="boardTitle">Mean error in air temperature, forecast one day ahead</p>
+        <p class="board__key">Lower is better</p>
       </div>
-
-      <div class="tile-feature">
-        <figure class="tile-feature__img">
-          <img src="assets/img/tiles.jpg" alt="Close-up of pale ceramic roof tiles with narrow ventilation gaps between them" width="800" height="1200" loading="lazy">
-          <figcaption><span>Fig. 04</span> Ceramic roof tile with ventilation gaps. Visualisation.</figcaption>
-        </figure>
-        <div class="tile-feature__text">
-          <p class="eyebrow">Why self-cleaning matters</p>
-          <p class="big-quote">Reflective roofs usually fail slowly. Dust, soot and grime darken them, and every lost point of albedo is heat let back in.</p>
-          <p class="prose">Under suitable light, anatase TiO<sub>2</sub> generates reactive species that break down organic dirt on its surface. The aim is a roof that stays reflective for longer with less maintenance — a property we will confirm through outdoor exposure testing.</p>
-        </div>
-      </div>
+      <div class="bars" id="bars" role="list"></div>
+      <p class="board__credit" id="boardCredit">&nbsp;</p>
     </div>
-  </section>
 
-  <!-- ========== 03 PHYSICS ========== -->
-  <section class="section section--night" id="physics">
-    <div class="wrap">
-      <header class="section__head">
-        <span class="section__num">§ 03</span>
-        <h2>Reflect the sun.<br>Radiate to space.</h2>
-        <p class="section__intro">Sunlight arrives mostly between 0.3 and 2.5&nbsp;µm. A warm surface glows back in the far infrared — and between roughly 8 and 13&nbsp;µm the atmosphere is nearly transparent, so heat emitted in that band can escape toward the cold of space.</p>
-      </header>
+    <div class="chips" id="chips"></div>
 
-      <figure class="spectrum">
-        <div class="spectrum__readout" aria-live="polite">
-          <span class="spectrum__wl" id="wlOut">λ — µm</span>
-          <span class="spectrum__zone" id="zoneOut">Move across the chart</span>
-        </div>
-        <svg id="spectrum" role="img" aria-labelledby="specTitle">
-          <title id="specTitle">Normalised spectra: solar irradiance peaking near 0.5 µm, which TiO₂ reflects, and thermal emission from a 300 K surface peaking near 10 µm, which can escape through the 8–13 µm atmospheric window.</title>
-        </svg>
-        <div class="spectrum__legend">
-          <span><i class="sw sw--sun"></i>Solar spectrum (5 778 K) — reflected &amp; scattered by TiO<sub>2</sub></span>
-          <span><i class="sw sw--ir"></i>Surface emission (300 K) — radiated by PDMS</span>
-          <span><i class="sw sw--win"></i>Atmospheric transparency window</span>
-        </div>
-        <figcaption><span>Fig. 05</span> Blackbody curves, peak-normalised; log wavelength axis. Atmospheric transmittance simplified for illustration.</figcaption>
-      </figure>
-
-      <div class="mechanisms">
-        <div><span class="mono">0.3–0.4 µm</span><h3>Ultraviolet</h3><p>Backscattered by the rutile wall coating — and used by anatase surfaces to drive self-cleaning photocatalysis.</p></div>
-        <div><span class="mono">0.4–0.7 µm</span><h3>Visible</h3><p>Reflected off roofs and walls; transmitted through the window film so interiors keep their daylight and views.</p></div>
-        <div><span class="mono">0.7–2.5 µm</span><h3>Near-infrared</h3><p>Roughly half of the sun’s energy. Scattered by TiO<sub>2</sub> particles before it can warm the envelope.</p></div>
-        <div><span class="mono">8–13 µm</span><h3>Long-wave IR</h3><p>The band the PDMS film is engineered to emit in — heat that leaves through the sky’s transparency window.</p></div>
+    <div class="board" id="spread">
+      <div class="board__head">
+        <p class="board__title">Next seven days, eight opinions</p>
+        <p class="board__key" id="spreadKey">&nbsp;</p>
       </div>
-      <p class="night-note"><span class="mono">Engineering note</span> Radiative cooling is not automatic. A film’s solar reflectance, visible transmission and infrared emissivity have to be engineered together — and measured. That testing is part of our plan (§&nbsp;07).</p>
+      <svg class="plot plot--tall" id="spreadChart" role="img" aria-label="Temperature forecast from each model for the next seven days"></svg>
     </div>
-  </section>
 
-  <!-- ========== 04 IMPACT / TARGETS ========== -->
-  <section class="section" id="impact">
-    <div class="wrap">
-      <header class="section__head">
-        <span class="section__num">§ 04</span>
-        <h2>Performance targets.</h2>
-        <p class="section__intro">These are the figures ATHERA is designed to reach. Each is labelled with what it actually is — a component target, a system capacity or a city-scale projection — and none is presented as a measured result until independent testing says so.</p>
-      </header>
-
-      <div class="figures">
-        <div class="figure">
-          <span class="status status--target">Design target · wall surface</span>
-          <p class="figure__num"><span data-count="50">50</span>%<sup>+</sup></p>
-          <h3>Solar heat gain blocked</h3>
-          <p>The exterior wall coating is designed to stop over half of solar heat gain at the wall surface.</p>
-        </div>
-        <div class="figure">
-          <span class="status status--spec">System capacity · storage</span>
-          <p class="figure__num"><span data-count="30000" data-format="comma">30,000</span><small>L</small></p>
-          <h3>Rainwater storage</h3>
-          <p>Integrated roof system storing rainwater for non-potable use. Annual yield depends on rainfall and roof area.</p>
-        </div>
-        <div class="figure">
-          <span class="status status--proj">Projection · city-scale</span>
-          <p class="figure__num">3–<span data-count="5">5</span><small>°C</small></p>
-          <h3>Heat-island reduction</h3>
-          <p>Potential reduction in urban heat-island intensity from widespread deployment — not from a single building.</p>
-        </div>
+    <div class="method" id="method">
+      <h3>How this is scored</h3>
+      <div class="method__cols">
+        <p>Every hour for the past seven days, each model's temperature forecast for Karachi, made one, two and three days earlier, is compared with what the analysis says happened. The bar is the mean absolute error across those hours. The bias line says whether the model runs warm or cool here.</p>
+        <p><strong>What it isn't.</strong> The reference is Open-Meteo's best-match analysis for this grid point, not a thermometer at Jinnah airport. A model that feeds that analysis has home advantage, and one week in one season is a small sample. Read it as a guide to who to trust this week, not a verdict.</p>
       </div>
-
-      <p class="callout-line"><span class="mono">Note</span> <span>The passive layers need <strong>no operating electricity</strong> to do their job — a fundamental advantage over every active cooling system.</span></p>
-
-      <div class="benefits">
-        <figure class="benefits__img">
-          <img src="assets/img/residence.jpg" alt="White residential building with planted balconies and a rooftop solar array" width="800" height="1200" loading="lazy">
-          <figcaption><span>Fig. 06</span> Residential application. Visualisation.</figcaption>
-        </figure>
-        <div class="benefits__list">
-          <p class="eyebrow">Benefits across three dimensions</p>
-          <p class="benefits__lead">By intercepting heat at the building surface, ATHERA aims to break the link between solar radiation and carbon emissions.</p>
-          <dl>
-            <div><dt><span class="mono">i.</span> Environmental</dt><dd>Lower cooling demand, reduced grid stress and lower operational carbon. At scale, a contribution to cooler neighbourhoods.</dd></div>
-            <div><dt><span class="mono">ii.</span> Economic</dt><dd>Lower electricity spend over the building lifecycle, reduced maintenance from self-cleaning surfaces, and modular deployment that allows phased investment.</dd></div>
-            <div><dt><span class="mono">iii.</span> Social</dt><dd>Better thermal comfort in housing, schools, hospitals and public buildings — most critically in heat-vulnerable communities and places with unreliable power.</dd></div>
-          </dl>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== 05 BUSINESS ========== -->
-  <section class="section section--rule" id="business">
-    <div class="wrap">
-      <header class="section__head">
-        <span class="section__num">§ 05</span>
-        <h2>A retrofit business, not a materials catalogue.</h2>
-        <p class="section__intro">ATHERA sells outcomes for whole buildings: we assess the envelope, specify the right components, install them and measure the result. B2B, B2G and, in time, technology licensing.</p>
-      </header>
-
-      <div class="channels">
-        <article>
-          <span class="channels__n">01</span>
-          <h3>Green building retrofits</h3>
-          <p>We assess an existing building, recommend components, supply materials and install. Revenue comes from the retrofit contract.</p>
-        </article>
-        <article>
-          <span class="channels__n">02</span>
-          <h3>Government &amp; institutional projects</h3>
-          <p>Public buildings, schools, hospitals and infrastructure — larger projects through institutional procurement and sustainability programmes.</p>
-        </article>
-        <article>
-          <span class="channels__n">03</span>
-          <h3>Technology licensing</h3>
-          <p>Licensing the integrated system to manufacturers, developers and regional partners, so ATHERA can scale without owning every factory and crew.</p>
-        </article>
-      </div>
-
-      <div class="clients">
-        <div class="clients__intro">
-          <p class="eyebrow">Who we serve</p>
-          <p class="clients__lead">We start with high-cooling-demand commercial and public buildings, then move into residential adoption.</p>
-        </div>
-        <table class="clients__table">
-          <tbody>
-            <tr><th scope="row">Commercial property owners</th><td>Cut long-term cooling expenditure</td></tr>
-            <tr><th scope="row">Schools &amp; universities</th><td>Improve classroom thermal comfort</td></tr>
-            <tr><th scope="row">Hospitals</th><td>Better indoor environmental conditions</td></tr>
-            <tr><th scope="row">Government buildings</th><td>Improve energy efficiency</td></tr>
-            <tr><th scope="row">Property developers</th><td>Build sustainable technology in from day one</td></tr>
-            <tr><th scope="row">Facility managers</th><td>Lower building operating costs</td></tr>
-            <tr><th scope="row">Residential communities</th><td>Reduce household cooling demand</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="process">
-        <p class="eyebrow">How a retrofit works</p>
-        <ol>
-          <li><span>01</span><h4>Identify</h4><p>Buildings with high cooling spend.</p></li>
-          <li><span>02</span><h4>Assess</h4><p>Survey roof, walls and windows.</p></li>
-          <li><span>03</span><h4>Model</h4><p>Find where heat gain is greatest.</p></li>
-          <li><span>04</span><h4>Specify &amp; quote</h4><p>Recommend the right components.</p></li>
-          <li><span>05</span><h4>Install</h4><p>One surface or the full envelope.</p></li>
-          <li class="is-key"><span>06</span><h4>Monitor</h4><p>Measure temperature and electricity use, before and after.</p></li>
-          <li><span>07</span><h4>Scale</h4><p>Use measured results to win the next contract.</p></li>
-        </ol>
-        <p class="process__note">Step 06 is the one that matters most: a measured fall in cooling energy is evidence, not marketing.</p>
-      </div>
-
-      <div class="advantage">
-        <p class="eyebrow">Why ATHERA</p>
-        <p class="advantage__lead">TiO<sub>2</sub> coatings, reflective roofs and radiative films already exist in various forms. We don’t claim to have invented a new material. <em>Our advantage is integration.</em></p>
-        <ul>
-          <li><b>Integrated system</b> Roof, walls and windows treated together.</li>
-          <li><b>Passive operation</b> No electricity needed for the cooling mechanisms.</li>
-          <li><b>Modular</b> Start with one surface, expand as budget allows.</li>
-          <li><b>Photocatalytic surfaces</b> Intended to slow dirt build-up and break down certain pollutants.</li>
-          <li><b>Rainwater capture</b> A water-management benefit from the same roof works.</li>
-          <li><b>Retrofit-ready</b> Designed for existing buildings as well as new ones.</li>
-          <li><b>Licensable</b> Growth through manufacturers and regional partners.</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== 06 ECONOMICS ========== -->
-  <section class="section section--paper2" id="economics">
-    <div class="wrap">
-      <header class="section__head">
-        <span class="section__num">§ 06</span>
-        <h2>Modular, cost-scalable, profitable.</h2>
-        <p class="section__intro">ATHERA deploys as a single component or a full-envelope retrofit. The project budget deliberately prioritises high-impact infrastructure; community outreach is run by volunteers at zero cost.</p>
-      </header>
-
-      <div class="budget">
-        <div class="budget__head">
-          <div>
-            <p class="eyebrow">Funding requirement</p>
-            <p class="budget__split"><span>Capital deployment <b>$121,948</b></span><span>Operational reserve <b>$20,000</b></span></p>
-          </div>
-          <p class="budget__total">$<span data-count="141948" data-format="comma">141,948</span></p>
-        </div>
-        <table class="budget__table">
-          <thead><tr><th scope="col">Line item</th><th scope="col" class="hide-sm">Scope</th><th scope="col">Share</th><th scope="col" class="num">USD</th></tr></thead>
-          <tbody>
-            <tr style="--v:88910">
-              <th scope="row">Roof &amp; water capture</th>
-              <td class="hide-sm">30° grooved TiO<sub>2</sub> tiles, roof system and the integrated 30,000&nbsp;L rainwater infrastructure — the largest single investment.</td>
-              <td><span class="bar"></span></td><td class="num">88,910</td>
-            </tr>
-            <tr style="--v:20000">
-              <th scope="row">Operational reserve</th>
-              <td class="hide-sm">3–5 years of early-deployment maintenance and performance monitoring.</td>
-              <td><span class="bar"></span></td><td class="num">20,000</td>
-            </tr>
-            <tr style="--v:16700">
-              <th scope="row">Window films</th>
-              <td class="hide-sm">TiO<sub>2</sub>–PDMS radiative cooling films for fenestration retrofit across pilot sites.</td>
-              <td><span class="bar"></span></td><td class="num">16,700</td>
-            </tr>
-            <tr style="--v:9788">
-              <th scope="row">Wall coating</th>
-              <td class="hide-sm">Rutile TiO<sub>2</sub> reflective, photocatalytic exterior coating for pilot facades.</td>
-              <td><span class="bar"></span></td><td class="num">9,788</td>
-            </tr>
-            <tr style="--v:6550">
-              <th scope="row">Governance &amp; legal</th>
-              <td class="hide-sm">SECP incorporation, patent filings and independent lab testing to validate performance claims.</td>
-              <td><span class="bar"></span></td><td class="num">6,550</td>
-            </tr>
-            <tr style="--v:0">
-              <th scope="row">Community outreach</th>
-              <td class="hide-sm">Run through volunteer initiatives.</td>
-              <td><span class="bar"></span></td><td class="num">0</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="unit">
-        <div class="unit__text">
-          <p class="eyebrow">Unit economics · one integrated retrofit</p>
-          <h3 class="unit__title">$30,200 to deliver. $52,150 to sell. <em>42% gross margin.</em></h3>
-          <div class="stack" aria-label="Retrofit cost and profit, adding up to the $52,150 price">
-            <span class="stack__seg s1" style="--w:14000" title="Roof tiles $14,000"><b>Roof tiles</b>14,000</span>
-            <span class="stack__seg s2" style="--w:7200" title="Wall coating $7,200"><b>Wall</b>7,200</span>
-            <span class="stack__seg s3" style="--w:3000" title="Window films $3,000"><b>Film</b>3,000</span>
-            <span class="stack__seg s4" style="--w:6000" title="Engineering &amp; installation $6,000"><b>Install</b>6,000</span>
-            <span class="stack__seg s5" style="--w:21950" title="Gross profit $21,950"><b>Gross profit</b>21,950</span>
-          </div>
-          <div class="stack__axis"><span>$0</span><span>Cost $30,200</span><span>Price $52,150</span></div>
-
-          <div class="ledgers">
-            <table>
-              <caption>Cost to ATHERA</caption>
-              <tbody>
-                <tr><th scope="row">Roof tiles</th><td>$14,000</td></tr>
-                <tr><th scope="row">Wall coating</th><td>$7,200</td></tr>
-                <tr><th scope="row">Window films</th><td>$3,000</td></tr>
-                <tr><th scope="row">Engineering &amp; installation</th><td>$6,000</td></tr>
-              </tbody>
-              <tfoot><tr><th scope="row">Total cost</th><td>$30,200</td></tr></tfoot>
-            </table>
-            <table>
-              <caption>Price to customer</caption>
-              <tbody>
-                <tr><th scope="row">Roof tiles <small>500 m² × $45</small></th><td>$22,500</td></tr>
-                <tr><th scope="row">Wall coating <small>800 m² × $18</small></th><td>$14,400</td></tr>
-                <tr><th scope="row">Window films <small>150 m² × $35</small></th><td>$5,250</td></tr>
-                <tr><th scope="row">Engineering &amp; installation</th><td>$10,000</td></tr>
-              </tbody>
-              <tfoot><tr><th scope="row">Selling price</th><td>$52,150</td></tr></tfoot>
-            </table>
-          </div>
-          <p class="fine">Gross profit $52,150 − $30,200 = $21,950, a 42.09% gross margin. Costs are pre-quotation estimates; supplier quotes will replace them.</p>
-        </div>
-
-        <div class="calc">
-          <p class="calc__title">What does the customer get back?</p>
-          <label for="bill" class="calc__label">Annual cooling bill <output id="billOut" for="bill">$75,000</output></label>
-          <input type="range" id="bill" min="10000" max="250000" step="5000" value="75000">
-          <label for="cutPct" class="calc__label">Reduction in cooling spend <output id="cutOut" for="cutPct">20%</output></label>
-          <input type="range" id="cutPct" min="5" max="40" step="1" value="20">
-          <dl class="calc__grid">
-            <div><dt>Annual saving</dt><dd id="save">$15,000</dd></div>
-            <div><dt>Payback on $52,150</dt><dd id="payback">3.48 yrs</dd></div>
-            <div><dt>Net after 10 years</dt><dd id="net10">$97,850</dd></div>
-            <div><dt>Monthly saving</dt><dd id="month">$1,250</dd></div>
-          </dl>
-          <p class="calc__note"><strong>Modelling scenario, not a guarantee.</strong> Our reference case is a $75,000 annual bill with an assumed 20% cut, which pays back in about 3.5 years. Real savings depend on the building and will be measured in pilots.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== 07 EVIDENCE ========== -->
-  <section class="section" id="evidence">
-    <div class="wrap">
-      <header class="section__head">
-        <span class="section__num">§ 07</span>
-        <h2>What we claim — and how we’ll prove it.</h2>
-        <p class="section__intro">A claim we can’t defend is worth nothing to a building owner. Here is every headline number, what kind of number it is today, and the test that will turn it into evidence.</p>
-      </header>
-
-      <div class="evidence">
-        <table>
-          <thead><tr><th scope="col">Claim</th><th scope="col">Status today</th><th scope="col">How we will verify it</th></tr></thead>
-          <tbody>
-            <tr><th scope="row">Wall coating blocks &gt;50% of solar heat gain</th><td><span class="status status--target">Design target</span></td><td>Solar reflectance measurement and outdoor test panels</td></tr>
-            <tr><th scope="row">≈20% lower cooling spend</th><td><span class="status status--model">Model assumption</span></td><td>Controlled pilot buildings with metered cooling energy, before and after</td></tr>
-            <tr><th scope="row">Window film radiates heat through the 8–13 µm window</th><td><span class="status status--target">Concept · needs engineering</span></td><td>Spectral transmission and infrared emissivity testing</td></tr>
-            <tr><th scope="row">Self-cleaning keeps roofs reflective</th><td><span class="status status--spec">Known material property</span></td><td>Outdoor exposure and weathering tests for durability</td></tr>
-            <tr><th scope="row">Breaks down NO<sub>x</sub> and VOCs</th><td><span class="status status--spec">Known material property</span></td><td>Independent air-quality testing, including reaction by-products</td></tr>
-            <tr><th scope="row">30,000 L of rainwater</th><td><span class="status status--spec">Storage capacity</span></td><td>Annual yield from local rainfall and roof-area calculations</td></tr>
-            <tr><th scope="row">3–5 °C heat-island reduction</th><td><span class="status status--proj">City-scale projection</span></td><td>Urban climate modelling; never claimed for one building</td></tr>
-            <tr><th scope="row">$30,200 cost per retrofit</th><td><span class="status status--model">Estimate</span></td><td>Supplier quotations and installation bids</td></tr>
-          </tbody>
-        </table>
-        <p class="fine">Independent lab testing is funded in the governance &amp; legal budget line. Long-term monitoring is funded by the $20,000 operational reserve.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== 08 ROADMAP ========== -->
-  <section class="section section--rule" id="roadmap">
-    <div class="wrap">
-      <header class="section__head">
-        <span class="section__num">§ 08</span>
-        <h2>From pilot rooftops to a global standard.</h2>
-        <p class="section__intro">Because ATHERA is a modular retrofit, it fits existing structures and new developments alike. Each phase reduces risk and builds on the data from the one before.</p>
-      </header>
-
-      <ol class="roadmap">
-        <li class="is-now">
-          <span class="roadmap__step">Phase 1</span>
-          <h3>Pilot projects</h3>
-          <p>Schools, residential communities and healthcare facilities. Install initial systems, monitor indoor temperatures, measure cooling energy and collect performance data.</p>
-          <span class="roadmap__flag">Starting point</span>
-        </li>
-        <li>
-          <span class="roadmap__step">Phase 2</span>
-          <h3>Commercial scale-up</h3>
-          <p>Partnerships with commercial developers and facility managers. Larger contracts, commercial revenue and a repeatable installation process.</p>
-        </li>
-        <li>
-          <span class="roadmap__step">Phase 3</span>
-          <h3>Smart-city integration</h3>
-          <p>Nationwide deployment aligned with government climate-adaptation programmes and integration into urban infrastructure.</p>
-        </li>
-        <li>
-          <span class="roadmap__step">Phase 4</span>
-          <h3>Global adaptation</h3>
-          <p>Technology transfer to heat-vulnerable markets worldwide, aligned with SDG 13 and international climate-finance mechanisms.</p>
-        </li>
-      </ol>
-    </div>
-  </section>
-
-  <!-- ========== FAQ ========== -->
-  <section class="section section--paper2" id="faq">
-    <div class="wrap faq">
-      <header class="faq__head">
-        <p class="eyebrow">Questions</p>
-        <h2>Asked often, answered plainly.</h2>
-      </header>
-      <div class="faq__list">
-        <details><summary>What is TiO<sub>2</sub>?</summary><p>Titanium dioxide is a widely used white inorganic compound with strong light-scattering properties, found in paints, coatings and many industrial products. Certain crystal forms are also photocatalytic under suitable light. It is well characterised and non-toxic in these applications.</p></details>
-        <details><summary>What’s the difference between anatase and rutile?</summary><p>They are two crystal structures of titanium dioxide. Anatase is known for strong photocatalytic activity, so we use it on the roof tiles for self-cleaning. Rutile has a higher refractive index and excellent optical scattering, so we use it in the wall coating for reflectance.</p></details>
-        <details><summary>What is photocatalytic self-cleaning?</summary><p>When TiO<sub>2</sub> absorbs suitable light it generates reactive species that break down certain organic contaminants on its surface. That slows the build-up of organic dirt that would otherwise darken a reflective surface.</p></details>
-        <details><summary>What are NO<sub>x</sub> and VOCs?</summary><p>Nitrogen oxides (NO<sub>x</sub>) are pollutants produced mainly by high-temperature combustion such as vehicle engines and industry. Volatile organic compounds (VOCs) are carbon-based chemicals that evaporate easily, from sources like solvents and paints.</p></details>
-        <details><summary>How does the roof ventilation gap work?</summary><p>Heat warms the air under the tiles. Warm air rises and leaves through the ventilated space while cooler air is drawn in behind it. It’s natural convection — no fans, no electricity.</p></details>
-        <details><summary>What is radiative cooling?</summary><p>Every warm surface sheds heat as infrared radiation. Between about 8 and 13 µm the atmosphere is largely transparent, so heat emitted in that band can escape toward space. Our window film is designed to emit strongly in that band — a property we will verify with emissivity testing.</p></details>
-        <details><summary>How is this different from an air conditioner?</summary><p>An air conditioner uses electricity to remove heat that has already entered. ATHERA reduces the heat that gets in, so the air conditioner has less to do. It complements cooling equipment rather than replacing it outright.</p></details>
-        <details><summary>Can it go on existing buildings?</summary><p>Yes. ATHERA is modular and retrofit-oriented. Components can be installed individually or together, depending on the building.</p></details>
-        <details><summary>What if a customer can’t afford the full system?</summary><p>Start with the surface where heat gain is greatest — often the roof — and add the walls and windows later. The assessment tells us where to begin.</p></details>
-        <details><summary>Are the performance numbers proven?</summary><p>Not yet, and we say so. They are design targets and model assumptions. Pilot buildings with metered energy use and independent lab testing are how we will prove them — see §&nbsp;07.</p></details>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== CLOSING ========== -->
-  <section class="closing">
-    <div class="closing__img">
-      <img src="assets/img/city.jpg" alt="Pale, hazy skyline of towers with solar-covered low-rise buildings and transit lines" width="800" height="1200" loading="lazy">
-    </div>
-    <div class="closing__text">
-      <h2>Climate action begins with smarter buildings.</h2>
-      <p class="closing__lede">ATHERA doesn’t just cool buildings. It changes how buildings interact with heat.</p>
-      <ul class="principles">
-        <li><h3>Passive by design</h3><p>No operating electricity, no refrigerants, no ongoing emissions from the cooling layers.</p></li>
-        <li><h3>Modular by nature</h3><p>Deploy one component or the full envelope — ATHERA scales with your budget.</p></li>
-        <li><h3>Proven chemistry</h3><p>TiO<sub>2</sub> is a well-characterised, non-toxic material with decades of industrial use.</p></li>
-        <li><h3>Aligned with SDG 13</h3><p>Built to support UN Climate Action through measurable, verifiable impact.</p></li>
-      </ul>
     </div>
   </section>
 </main>
 
-<footer class="footer">
-  <div class="wrap footer__inner">
-    <span class="wordmark wordmark--lg">ATHERA</span>
-    <p>Passive radiative cooling for a sustainable built environment. Pakistan · B2B · B2G · Licensing.</p>
-    <a class="link-arrow" href="#top">Back to top <span aria-hidden="true">↑</span></a>
+<footer class="foot">
+  <div class="wrap foot__top">
+    <p class="foot__lead"><svg class="brand__mark" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="11.5" r="5.2"/><path d="M3 20.5h22"/></svg> Weather data by <a href="https://open-meteo.com/" rel="noopener">Open-Meteo</a>, CC BY 4.0</p>
+    <div class="foot__cols">
+      <div><h4>Forecast</h4><p>Open-Meteo best match, refreshed every ten minutes while this page is open.</p></div>
+      <div><h4>Air</h4><p>CAMS global atmospheric composition, on the US AQI scale.</p></div>
+      <div><h4>Sea</h4><p>Wave and sea-level models at 24.78°N 66.95°E. Modelled, not a tide gauge. Don't navigate by it.</p></div>
+      <div><h4>City</h4><p>Building footprints and heights from <a href="https://sites.research.google/gr/open-buildings/" rel="noopener">Google Open Buildings</a> v3 and 2.5D Temporal, CC BY 4.0.</p></div>
+      <div><h4>Sky</h4><p>Sun and moon are computed for 24.86°N 67.00°E, then drawn where they really are.</p></div>
+    </div>
+  </div>
+  <div class="foot__mark" aria-hidden="true">
+    <span>Mausam</span>
+    <span lang="ur" dir="rtl">موسم</span>
   </div>
 </footer>
 
-<script src="script.js?v=4" defer></script>
-<script type="module" src="assets/showcase.js?v=4"></script>
+<div class="dock" id="dock" hidden>
+  <button type="button" class="dock__step" id="dockPrev" aria-label="One hour earlier">←</button>
+  <span class="dock__text" id="dockText" aria-live="polite"></span>
+  <button type="button" class="dock__step" id="dockNext" aria-label="One hour later">→</button>
+  <button type="button" class="dock__now" id="dockNow">Back to now</button>
+</div>
+
+<script type="module" src="js/app.js?v=1"></script>
 </body>
 </html>
