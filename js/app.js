@@ -881,17 +881,19 @@ let city = null;
 const cityState = (e) => ({
   time: state.idx === 0 ? Date.now() : e.t, live: state.idx === 0, cloud: (e.cloud ?? 0) / 100, haze: hazeOf(e), vis: (e.vis ?? 20000) / 1000,
   wind: e.wind ?? 0, wdir: e.wdir ?? 0, rain: e.rain ?? 0, tide: e.tide ?? 0, wave: e.wave ?? 0.4, temp: e.temp, code: e.code,
+  idx: state.idx, max: Math.max(0, state.hours.length - 1),
+  label: state.idx === 0 ? `Now · ${T(e.temp)} · ${COND[e.code] || ""}` : `${F.wd.format(e.t)} ${hour(e.t)} · ${T(e.temp)} · ${COND[e.code] || ""}`,
 });
 const cityStage = $("#cityStage");
 if (cityStage) {
   const io = new IntersectionObserver((es) => {
     if (!es[0].isIntersecting) return;
     io.disconnect();
-    import("./city.js?v=2").then((mod) => {
+    import("./city.js?v=3").then((mod) => {
       const spinBtn = document.getElementById("citySpin");
       let spin = false;
       spinBtn?.addEventListener("click", () => { spin = !spin; spinBtn.setAttribute("aria-pressed", spin); });
-      city = mod.createCity(cityStage, { spin: () => spin });
+      city = mod.createCity(cityStage, { spin: () => spin, select: (i) => select(i) });
       if (state.hours.length) city.set(cityState(state.hours[state.idx]));
     }).catch((err) => {
       console.warn("3D city unavailable", err);

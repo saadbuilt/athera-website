@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@200..700&family=Geist+Mono:wght@400;500&family=Noto+Nastaliq+Urdu:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,300..500;1,8..60,300..500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=3">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a0a0a'/%3E%3Ccircle cx='16' cy='14' r='5' fill='%23f4f4f2'/%3E%3Cpath d='M5 23h22' stroke='%232456ff' stroke-width='2.4'/%3E%3C/svg%3E">
 </head>
 <body>
@@ -97,20 +97,34 @@
         <button class="pill pill--white" id="citySpin" type="button" aria-pressed="false">Slow orbit</button>
       </div>
     </header>
-    <div class="places" role="group" aria-label="Fly to"></div>
-    <div class="stage stage--city" id="cityStage">
-      <canvas id="cityCanvas" tabindex="0" role="img" aria-label="Interactive 3D model of Karachi built from Google Open Buildings, under the current weather. Drag to rotate, right-drag or Shift-drag to pan, scroll after clicking to zoom; arrow keys pan and plus and minus zoom."></canvas>
-      <div class="stage__pins" id="cityPins"></div>
-      <p class="stage__hud"><span>Google Open Buildings · Sentinel-2 · GLO-30</span><span class="stage__status" aria-live="off"></span></p>
-      <div class="stage__read" id="cityRead" aria-live="off"></div>
+    <div class="stage stage--city is-loading" id="cityStage">
+      <canvas id="cityCanvas" tabindex="0" role="img" aria-label="Interactive 3D model of Karachi built from Google Open Buildings, under the forecast weather. Drag to rotate, right-drag or Shift-drag to pan, click then scroll to zoom; arrow keys pan, plus and minus zoom."></canvas>
+      <div class="stage__pins"></div>
+
+      <div class="glass city__title">
+        <p class="city__name">Karachi <span>3D</span></p>
+        <p class="city__status" data-status aria-live="off">Loading imagery and terrain</p>
+        <span class="city__progress" data-progress aria-hidden="true"><i></i></span>
+      </div>
+
+      <div class="glass city__places" data-places role="group" aria-label="Fly to"></div>
+
+      <div class="glass city__cond">
+        <label class="city__when"><span data-when>Now</span>
+          <input type="range" data-time min="0" max="47" value="0" step="1" aria-label="Hour shown in the 3D city">
+        </label>
+        <p data-cond aria-live="off">&nbsp;</p>
+      </div>
+
       <div class="stage__tools">
+        <button type="button" data-home aria-label="Back to all of Karachi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6 8 6v8h-5v-5H9v5H4z"/></svg></button>
         <button type="button" data-north aria-label="Point north"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 3l5 13h-10z"/><path d="M14 16v9"/></svg></button>
         <button type="button" data-zoom="in" aria-label="Zoom in">+</button>
         <button type="button" data-zoom="out" aria-label="Zoom out">−</button>
       </div>
       <p class="stage__scale" aria-hidden="true"><i></i><span>5 km</span></p>
-      <p class="stage__hint" id="cityHint">Drag to turn · right-drag to move · click, then scroll to zoom</p>
-      <p class="stage__wheel" aria-hidden="true">Click the map first, or hold Ctrl / ⌘ while scrolling, to zoom</p>
+      <p class="stage__hint">Drag to turn · right-drag to move · click, then scroll to zoom</p>
+      <p class="stage__wheel" aria-hidden="true"><span>Click the map first, or hold Ctrl / ⌘ while scrolling, to zoom</span></p>
       <p class="stage__fallback">The 3D city needs WebGL 2, which this browser doesn't have switched on. Everything else on the page still works.</p>
     </div>
     <p class="wrap fine">Buildings: <a href="https://sites.research.google/gr/open-buildings/" rel="noopener">Google Open Buildings</a> v3 footprints (CC BY 4.0 / ODbL), heights from Open Buildings 2.5D Temporal, 2023. Each footprint is drawn as its smallest enclosing rectangle; walls, windows and colours are generated from the satellite image beneath them. Imagery: <a href="https://s2maps.eu" rel="noopener">Sentinel-2 cloudless 2023</a> by EOX IT Services GmbH (contains modified Copernicus Sentinel data 2023, CC BY-NC-SA 4.0). Terrain: Copernicus GLO-30. Bahria Icon Tower is set to its published 273 m; the Mazar-e-Quaid dome is modelled by hand.</p>
@@ -304,6 +318,6 @@
   <button type="button" class="dock__now" id="dockNow">Back to now</button>
 </div>
 
-<script type="module" src="js/app.js?v=2"></script>
+<script type="module" src="js/app.js?v=3"></script>
 </body>
 </html>
