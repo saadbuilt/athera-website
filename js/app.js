@@ -889,7 +889,7 @@ if (cityStage) {
   const io = new IntersectionObserver((es) => {
     if (!es[0].isIntersecting) return;
     io.disconnect();
-    import("./city.js?v=3").then((mod) => {
+    import("./city.js?v=4").then((mod) => {
       const spinBtn = document.getElementById("citySpin");
       let spin = false;
       spinBtn?.addEventListener("click", () => { spin = !spin; spinBtn.setAttribute("aria-pressed", spin); });

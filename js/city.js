@@ -237,6 +237,26 @@ export function createCity(stage, opts = {}) {
              if (c.x > m && c.x < 1. - m && c.y > m * 1.4 && c.y < 1. - m * 1.4) discard; }` : ""}
           #include <map_fragment>
           diffuseColor.rgb = pow(diffuseColor.rgb, vec3(1.08)) * 1.1;
+          ${world ? "" : `{
+            // close up, 10 m pixels need texture inside them: grit, patches and wear, scaled to the surface type
+            float gpx = length(fwidth(vW.xz));
+            float near = 1. - smoothstep(.0015, .006, gpx);
+            if (near > .001) {
+              float lum = dot(diffuseColor.rgb, vec3(.333));
+              float grit = vnoise(vW.xz * 4200.) * .5 + vnoise(vW.xz * 1500.) * .3 + vnoise(vW.xz * 380.) * .2;
+              float blot = smoothstep(.35, .75, vnoise(vW.xz * 160.));
+              vec3 dusty = vec3(.62, .56, .46) * (lum * 1.6);
+              vec3 detail = diffuseColor.rgb * (.82 + .36 * grit);
+              detail = mix(detail, mix(detail, dusty, .35), blot * .5);
+              diffuseColor.rgb = mix(diffuseColor.rgb, detail, near);
+            }
+            // where the city is dense the ground between blocks is street: asphalt, patched and dusty
+            float dU = texture2D(uDensity, extUv(uExt)).r;
+            float paved = smoothstep(.18, .5, dU);
+            float wear = vnoise(vW.xz * 600.) * .6 + vnoise(vW.xz * 2400.) * .4;
+            vec3 asphalt = mix(vec3(.24, .24, .235), vec3(.36, .34, .31), wear) * (.9 + .2 * dot(diffuseColor.rgb, vec3(.5)));
+            diffuseColor.rgb = mix(diffuseColor.rgb, asphalt, paved * .7);
+          }`}
           float wm = ${world ? "texture2D(uWorldWater, extUv(uWorldExt)).r" : "texture2D(uWater, extUv(uExt)).r"};
           wm = smoothstep(.35, .65, wm);`)
         .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
@@ -360,12 +380,13 @@ export function createCity(stage, opts = {}) {
     float style = vHt > 38. ? 2. : (vHt > 14. ? 1. : 0.);
     // Karachi plaster: off-white, cream, concrete grey, sand, and the pastels of the older quarters
     vec3 pal[8];
-    pal[0] = vec3(.92,.90,.85); pal[1] = vec3(.88,.82,.70); pal[2] = vec3(.74,.73,.71); pal[3] = vec3(.86,.79,.66);
-    pal[4] = vec3(.80,.86,.84); pal[5] = vec3(.88,.78,.74); pal[6] = vec3(.93,.88,.74); pal[7] = vec3(.66,.67,.68);
+    pal[0] = vec3(.78,.76,.71); pal[1] = vec3(.74,.67,.55); pal[2] = vec3(.58,.57,.55); pal[3] = vec3(.71,.63,.50);
+    pal[4] = vec3(.62,.68,.66); pal[5] = vec3(.74,.62,.58); pal[6] = vec3(.80,.74,.58); pal[7] = vec3(.47,.48,.49);
     int k = int(floor(seed * 7.99));
     vec3 plaster = pal[0];
     for (int i = 1; i < 8; i++) if (i == k) plaster = pal[i];
-    plaster *= .88 + .2 * seed3;
+    plaster *= .8 + .3 * seed3;
+    plaster = mix(plaster, pow(vRoof, vec3(.9)) * 1.25, .3);       // dust and the real colour of the block
     vec3 sat = pow(vRoof, vec3(.9)) * 1.15;
     vec3 col; float glass = 0.; float lit = 0.; vec3 glow = vec3(0.);
     if (top) {
@@ -381,8 +402,9 @@ export function createCity(stage, opts = {}) {
       col = plaster;
       // weathering: rain streaks hang below each window band, grime at street level
       float streak = vnoise(vec2(w.x * .9 + seed * 17., y * .06));
-      col *= 1. - .16 * smoothstep(.55, .95, streak) * smoothstep(0., 6., y);
-      col *= mix(.68, 1., smoothstep(0., 3.5, y));
+      col *= 1. - .28 * smoothstep(.45, .95, streak) * smoothstep(0., 6., y);
+      col *= 1. - .12 * vnoise(w * vec2(.15, .4) + seed * 9.);
+      col *= mix(.55, 1., smoothstep(0., 3.5, y));
       if (style < 1.5) {
         float fh = 3.1;
         float shop = step(.55, seed2) * step(6., vHt);
@@ -722,6 +744,167 @@ export function createCity(stage, opts = {}) {
     }
   }
 
+  /* ---------- trees, from the satellite vegetation index ---------- */
+  // Unit-space models (height 1, crown diameter 1), coloured per vertex: trunk brown, canopy green.
+  const treeGeos = (() => {
+    const colorize = (g, fn) => {
+      const p = g.attributes.position, c = new Float32Array(p.count * 3);
+      for (let i = 0; i < p.count; i++) { const [r, gg, b] = fn(p.getX(i), p.getY(i), p.getZ(i)); c.set([r, gg, b], i * 3); }
+      g.setAttribute("color", new THREE.BufferAttribute(c, 3));
+      return g;
+    };
+    const lumpy = (g, amt, seed) => {
+      const p = g.attributes.position;
+      for (let i = 0; i < p.count; i++) {
+        const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+        const n = Math.sin(x * 12.9 + seed) * Math.cos(z * 9.1 - seed) * Math.sin(y * 7.3 + seed * 2);
+        const k = 1 + n * amt;
+        p.setXYZ(i, x * k, y * (1 + n * amt * 0.5), z * k);
+      }
+      g.computeVertexNormals();
+      return g;
+    };
+    const merge = (parts) => {
+      let total = 0; parts.forEach((g) => { total += g.attributes.position.count; });
+      const P = new Float32Array(total * 3), N = new Float32Array(total * 3), C = new Float32Array(total * 3), I = [];
+      let o = 0;
+      for (const g0 of parts) {
+        const g = g0.index ? g0 : g0;
+        P.set(g.attributes.position.array, o * 3); N.set(g.attributes.normal.array, o * 3); C.set(g.attributes.color.array, o * 3);
+        if (g.index) for (const v of g.index.array) I.push(v + o); else for (let v = 0; v < g.attributes.position.count; v++) I.push(v + o);
+        o += g.attributes.position.count;
+      }
+      const m = new THREE.BufferGeometry();
+      m.setAttribute("position", new THREE.BufferAttribute(P, 3));
+      m.setAttribute("normal", new THREE.BufferAttribute(N, 3));
+      m.setAttribute("color", new THREE.BufferAttribute(C, 3));
+      m.setIndex(I);
+      return m;
+    };
+    const bark = () => [0.28, 0.21, 0.15];
+    const trunk = (h, r) => { const g = new THREE.CylinderGeometry(r * 0.75, r, h, 6, 1, true); g.translate(0, h / 2, 0); return colorize(g, bark); };
+    // broadleaf: neem, banyan, gulmohar: a broad lumpy crown on a short trunk
+    const crown = lumpy(new THREE.IcosahedronGeometry(0.5, 2), 0.16, 1.7);
+    crown.scale(1, 0.62, 1); crown.translate(0, 0.62, 0);
+    colorize(crown, (x, y, z) => { const t = 0.85 + 0.25 * (y - 0.3); return [0.21 * t, 0.31 * t, 0.12 * t]; });
+    const broad = merge([trunk(0.42, 0.05), crown]);
+    // palm: a slim trunk and a drooping star of fronds
+    const fronds = [];
+    for (let k = 0; k < 7; k++) {
+      const a = (k / 7) * Math.PI * 2, g = new THREE.PlaneGeometry(0.55, 0.14, 3, 1);
+      g.translate(0.27, 0, 0);
+      const p = g.attributes.position;
+      for (let i = 0; i < p.count; i++) { const x = p.getX(i); p.setY(i, p.getY(i) - x * x * 0.55); }
+      g.rotateX(-Math.PI / 2 + 0.25); g.rotateY(a); g.translate(0, 0.96, 0);
+      g.computeVertexNormals();
+      fronds.push(colorize(g, () => [0.22, 0.31, 0.12]));
+    }
+    const palm = merge([trunk(0.96, 0.018), ...fronds]);
+    // mangrove and scrub: low domes, no visible trunk
+    const dome = (sat) => { const g = lumpy(new THREE.IcosahedronGeometry(0.5, 1), 0.2, 3.1); g.scale(1, 0.8, 1); g.translate(0, 0.4, 0); return colorize(g, (x, y) => { const t = 0.8 + 0.3 * y; return [sat[0] * t, sat[1] * t, sat[2] * t]; }); };
+    return [broad, palm, merge([dome([0.12, 0.2, 0.1])]), merge([dome([0.33, 0.33, 0.19])])];
+  })();
+  const TREE_ATTRS = /* glsl */ `attribute vec3 iPos; attribute vec2 iSize; attribute float iShade;`;
+  const TREE_TRANSFORM = /* glsl */ `
+    float tr = fract(sin(dot(iPos.xz, vec2(41.3, 289.1))) * 15731.7) * 6.2832;
+    float cT = cos(tr), sT = sin(tr);
+    vec3 pl = position * vec3(iSize.x, iSize.y, iSize.x);
+    vec3 transformed = vec3(pl.x * cT + pl.z * sT, pl.y, -pl.x * sT + pl.z * cT) + iPos;`;
+  const treeMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, metalness: 0, side: THREE.DoubleSide });
+  treeMat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, U);
+    sh.vertexShader = sh.vertexShader
+      .replace("#include <common>", `#include <common>\n${TREE_ATTRS}\nuniform sampler2D uSat; uniform vec4 uExt;\nvarying float vShade; varying vec3 vW; varying vec3 vGround;`)
+      .replace("#include <beginnormal_vertex>", `float tr0 = fract(sin(dot(iPos.xz, vec2(41.3, 289.1))) * 15731.7) * 6.2832;
+        vec3 objectNormal = vec3(normal.x * cos(tr0) + normal.z * sin(tr0), normal.y, -normal.x * sin(tr0) + normal.z * cos(tr0));`)
+      .replace("#include <begin_vertex>", TREE_TRANSFORM + `\nvShade = iShade;\nvGround = texture2D(uSat, vec2((iPos.x - uExt.x) / (uExt.y - uExt.x), (-iPos.z - uExt.z) / (uExt.w - uExt.z))).rgb;`)
+      .replace("#include <worldpos_vertex>", "#include <worldpos_vertex>\nvW = (modelMatrix * vec4(transformed, 1.)).xyz;");
+    sh.fragmentShader = sh.fragmentShader
+      .replace("#include <common>", `#include <common>\nvarying float vShade; varying vec3 vW; varying vec3 vGround;\n${GLSL_NOISE}`)
+      .replace("#include <color_fragment>", `#include <color_fragment>
+        // leaf clusters: break the canopy into light and shade at about half a metre
+        float leaf = vnoise(vW.xz * 2300. + vec2(vW.y * 1700., -vW.y * 1100.)) * .6 + vnoise(vW.xz * 900. - vW.y * 800.) * .4;
+        // take some colour from the ground under the tree so canopies sit in the imagery
+        vec3 g = pow(vGround, vec3(1.1)) * vec3(.85, 1.05, .8);
+        diffuseColor.rgb = mix(diffuseColor.rgb, g * 1.1, .45);
+        diffuseColor.rgb *= (.72 + .5 * leaf) * (.85 + .3 * vShade) * vec3(1., 1. + .08 * vShade, 1.);`)
+      .replace("#include <aomap_fragment>", `float cs = cloudShadow(vW); reflectedLight.directDiffuse *= cs; reflectedLight.directSpecular *= cs;\n#include <aomap_fragment>`);
+  };
+  treeMat.customProgramCacheKey = () => "trees";
+  const treeDepth = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
+  treeDepth.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", `#include <common>\n${TREE_ATTRS}`).replace("#include <begin_vertex>", TREE_TRANSFORM);
+  };
+  treeDepth.customProgramCacheKey = () => "trees-depth";
+
+  async function loadTrees(c) {
+    const buf = await getBin(`t/${c.i}_${c.j}.bin.gz`);
+    const n = new DataView(buf).getUint32(0, true);
+    let o = 4;
+    const xs = new Uint16Array(buf, o, n); o += 2 * n;
+    const ns = new Uint16Array(buf, o, n); o += 2 * n;
+    const cr = new Uint8Array(buf, o, n); o += n;
+    const ht = new Uint8Array(buf, o, n); o += n;
+    const kd = new Uint8Array(buf, o, n); o += n;
+    const sh = new Uint8Array(buf, o, n);
+    const byKind = [[], [], [], []];
+    for (let k = 0; k < n; k++) byKind[kd[k]].push(k);
+    const group = new THREE.Group();
+    const cx = (c.x0 + 2000) / 1000, cz = -(c.n0 + 2000) / 1000;
+    byKind.forEach((idx, kind) => {
+      if (!idx.length) return;
+      const m = idx.length, pos = new Float32Array(m * 3), size = new Float32Array(m * 2), shade = new Float32Array(m);
+      idx.forEach((k, i) => {
+        const x = (c.x0 + xs[k] / 16) / 1000, z = -(c.n0 + ns[k] / 16) / 1000;
+        pos.set([x, terrainAt(x, z) - 0.0003, z], i * 3);
+        size.set([cr[k] / 10000, ht[k] / 4000], i * 2);
+        shade[i] = sh[k] / 255;
+      });
+      const g = new THREE.InstancedBufferGeometry();
+      const base = treeGeos[kind];
+      g.index = base.index.clone();
+      for (const a of ["position", "normal", "color"]) g.setAttribute(a, base.attributes[a].clone());
+      g.setAttribute("iPos", new THREE.InstancedBufferAttribute(pos, 3));
+      g.setAttribute("iSize", new THREE.InstancedBufferAttribute(size, 2));
+      g.setAttribute("iShade", new THREE.InstancedBufferAttribute(shade, 1));
+      g.instanceCount = m;
+      g.boundingSphere = new THREE.Sphere(new THREE.Vector3(cx, terrainAt(cx, cz), cz), 3.2);
+      const mesh = new THREE.Mesh(g, treeMat);
+      mesh.customDepthMaterial = treeDepth;
+      mesh.castShadow = true; mesh.receiveShadow = true;
+      mesh.userData.n = m;
+      group.add(mesh);
+    });
+    scene.add(group);
+    return group;
+  }
+  const treeChunks = new Map();
+  let treeQueue = 0;
+  function scheduleTrees() {
+    if (!meta || !meta.trees) return;
+    const R = coarse ? 2.2 : 3.6;
+    for (const c of meta.trees.chunks) {
+      const cx = (c.x0 + 2000) / 1000, cz = -(c.n0 + 2000) / 1000;
+      const d = Math.max(0, Math.hypot(cx - rig.tx, cz - rig.tz) - 2.8);
+      let st = treeChunks.get(c);
+      if (!st) { st = { g: null, loading: false }; treeChunks.set(c, st); }
+      const want = rig.d < 7 && d < R;
+      if (want && !st.g && !st.loading && treeQueue < 2) {
+        st.loading = true; treeQueue++;
+        loadTrees(c).then((g) => { st.g = g; }).catch((e) => console.warn("trees failed", e)).finally(() => { st.loading = false; treeQueue--; });
+      }
+      if (st.g) {
+        const cam = Math.hypot(cx - camera.position.x, cz - camera.position.z, camera.position.y);
+        st.g.visible = rig.d < 9 && d < R * 1.5;
+        const lod = clamp(Math.pow(2.6 / Math.max(cam, 0.05), 1.4), 0.15, 1);
+        st.g.children.forEach((m) => { m.geometry.instanceCount = Math.max(1, Math.round(m.userData.n * lod)); m.castShadow = !noShadow && cam < 5; });
+        if (!want && d > R * 2.2) {
+          scene.remove(st.g); st.g.children.forEach((m) => m.geometry.dispose()); st.g = null;
+        }
+      }
+    }
+  }
+
   /* ---------- the Mazar-e-Quaid, by hand ---------- */
   function addMazar() {
     const mat = new THREE.MeshStandardMaterial({ color: 0xf4f2ec, roughness: 0.45 });
@@ -735,9 +918,6 @@ export function createCity(stage, opts = {}) {
       [new THREE.SphereGeometry(0.019, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2), 0.038],
     ];
     for (const [geo, py] of parts) { const m = new THREE.Mesh(geo, mat); m.position.y = py; m.castShadow = m.receiveShadow = true; g.add(m); }
-    // the long reflecting pools and gardens around it
-    const lawn = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), new THREE.MeshStandardMaterial({ color: 0x6f8a52, roughness: 1 }));
-    lawn.rotation.x = -Math.PI / 2; lawn.position.y = 0.0006; lawn.receiveShadow = true; g.add(lawn);
     scene.add(g);
   }
 
@@ -910,7 +1090,7 @@ export function createCity(stage, opts = {}) {
   let progressV = 0;
   const progress = (v) => { progressV = Math.max(progressV, v); };
   (async () => {
-    const r = await fetch(new URL("meta.json?v=3", BASE));
+    const r = await fetch(new URL("meta.json?v=4", BASE));
     meta = await r.json();
     aTotal = meta.buildings.chunks.filter((c) => c.a).length;
     progress(0.1);
@@ -989,8 +1169,8 @@ export function createCity(stage, opts = {}) {
     sun.shadow.normalBias = clamp(span * 0.0004, 0.00025, 0.006);
     const overcast = 1 - cur.cloud * 0.6;
     if (useMoon) { sun.intensity = 0.32 * phase.fraction * overcast; sun.color.setRGB(0.55, 0.66, 1); }
-    else { sun.intensity = smooth(-1.5, 8, sp.altitude) * 3.4 * overcast * (1 - cur.haze * 0.3); sun.color.copy(col(pal.sun)); }
-    hemi.intensity = 0.12 + pal.day * (0.9 + cur.cloud * 0.5);
+    else { sun.intensity = smooth(-1.5, 8, sp.altitude) * 2.7 * overcast * (1 - cur.haze * 0.3); sun.color.copy(col(pal.sun)); }
+    hemi.intensity = 0.12 + pal.day * (0.75 + cur.cloud * 0.5);
     hemi.color.copy(col(pal.zen)).lerp(new THREE.Color(1, 1, 1), 0.45);
     hemi.groundColor.copy(col(pal.hor)).lerp(new THREE.Color(0.8, 0.76, 0.7), 0.5);
 
@@ -1031,7 +1211,7 @@ export function createCity(stage, opts = {}) {
     }
 
     schedT += dt;
-    if (schedT > 0.3) { schedT = 0; schedule(); }
+    if (schedT > 0.3) { schedT = 0; schedule(); scheduleTrees(); }
 
     renderer.render(scene, camera);
     if (window.__citySnapReq) { window.__citySnapOut = canvas.toDataURL("image/jpeg", 0.88); window.__citySnapReq = false; }
